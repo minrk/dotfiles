@@ -1,0 +1,209 @@
+pypiurl() {
+    pkg="$1"
+    version="$2"
+    c="${1:1}"
+    url=https://pypi.io/packages/source/${pkg::1}/${pkg}/${pkg}-${version}.tar.gz
+    echo "$url"
+}
+
+# `ps | grep` utilities
+
+psgrep(){
+  ps aux | grep -e "$@" | grep -v "grep -e $@"
+}
+
+psgrepkillall(){
+  # sig=$1
+  # shift
+  pids=`psgrep $@ | awk '{ print $2 }'`
+  if [[ -z "$pids" ]]; then
+    echo "Nothing to kill"
+    return
+  fi
+  echo kill -KILL $pids
+  kill -KILL $pids
+}
+
+psgrepkillint(){
+  # sig=$1
+  # shift
+  pids=`psgrep $@ | awk '{ print $2 }'`
+  if [[ -z "$pids" ]]; then
+    echo "Nothing to kill"
+    return
+  fi
+  echo $pids
+  kill -INT $pids
+}
+alias psg="psgrep"
+alias pskill="psgrepkillall"
+alias psint="psgrepkillint"
+
+# find and remove matching files
+findrm(){
+  find "$1/" -name "$2" -exec rm -i {} \;
+}
+
+findrmrf(){
+  find "$1/" -name "$2" -exec rm -f {} \;
+}
+
+# mk and cd to a dir
+mkcd(){
+  mkdir -vp $1 && cd $1
+}
+
+# turn python source into rtf (useful for pasting code into presentations)
+
+py2rtf(){
+  for f in $@; do
+    pygmentize -O style=default -f rtf $f > $f.rtf
+  done
+}
+
+py2pb(){
+  for f in $@; do
+    pygmentize -O style=default -O font_size=20 -f rtf $f | pbcopy
+  done
+}
+
+py2html(){
+  for f in $@; do
+    pygmentize -O style=default -f html -O full $f > $f.html
+  done
+}
+
+
+if [ "$(uname)" = "Darwin" ]; then # I am a mac
+  # quicklook
+  ql(){
+    qlmanage -p "$@" > /dev/null 2>&1;
+  };
+  # quit applications by name via applescript
+  quit(){
+    for app in $@; do
+      echo "quitting $app"
+      osascript -e "tell application \"$app\" to quit" || echo "failed"
+    done
+  }
+
+fi
+
+setPYTHONPATH(){
+  if [ -z "$1" ]; then
+    pyver=`python -c "import sys; print sys.version.split()[0][:3]"`
+  else
+    pyver="$1"
+  fi
+  # echo $pyver
+  export PYTHONPATH=""
+  addPYTHONPATH  $HOME/usr/local/lib/python$pyver/site-packages
+}
+
+mute(){
+  $@ 2>/dev/null
+}
+muteall(){
+  $@ >/dev/null 2>&1
+}
+
+# find files in a dir and print, sorted by mtime
+recent(){
+  if [ -d "$1" ]; then
+    dir="$1"
+  else
+    dir="."
+  fi
+  find "$dir" -type f -exec stat -t "%Y-%m-%d %H:%M" -f "[%Sm] %N" {} \; | sort -r | less
+}
+
+authors(){
+  git log --format='%aN' "$@" | sort -u
+}
+
+# env activate/deactivate
+# these only matter when no env is active
+activate(){
+  d="$1"
+  test -d "$d" || d="$HOME/env/$d"
+  test -d "$d" && source "$d/bin/activate" || source activate $@
+}
+
+alias a=activate
+
+deactivate(){
+  if [ ! -z "$CONDA_DEFAULT_ENV" ]; then
+    conda deactivate
+  fi
+}
+
+alias da=deactivate
+
+
+tunnel(){
+  lp="$1"
+  rp="$2"
+  server="$3"
+  if [ -z "$4" ]; then
+    rhost="127.0.0.1"
+  else
+    rhost="$4"
+  fi
+  ssh -f -N -L 127.0.0.1:$lp:$rhost:$rp $server
+}
+
+authors(){
+  git log --format="* %aN: `git log --author=%aE $1`" $1 | sort -u | grep -v "ellisonbg@gmail.com" | grep -v "benjaminrk@gmail.com"
+}
+
+
+brewcheck() {
+  yesterday=`date -v-1d "+%Y-%m-%d"`
+
+  lastrun=`brew log -1 --date=short --format='%ad'`
+  if [[ "$yesterday" < "$lastrun" ]]; then
+    echo "checking for homebrew updates since $lastrun" >&2
+    brew update >&2 &
+    return
+  fi
+  pkgs=`brew outdated`
+  if [[ ! -z "$pkgs" ]]; then
+    echo "Outdated homebrew packages:" >&2
+    echo "$pkgs" >&2
+  fi
+}
+
+_brewcheck() {
+  brewcheck
+}
+
+cf-clone() {
+  dest="$HOME/dev/conda-forge/${1}-feedstock"
+  if [[ -d "$dest" ]]; then
+    echo "$dest exists"
+  else
+    git clone https://github.com/conda-forge/${1}-feedstock $dest
+  fi
+  cd "$dest"
+}
+
+netrc() {
+    python3 -c "import netrc; print(netrc.netrc().hosts['$1'][2])"
+}
+
+unconda() {
+  f="$(realpath "$1")"
+  base="${f%.*}"
+  mkdir "$base"
+  pushd "$base"
+  7z e -ba "$f"
+  zstd -d pkg-*.tar.zst
+  rm -f *.zst
+  tar -xf *.tar
+  rm -f *.tar
+}
+
+_unconda_complete() {
+  COMPREPLY=($(compgen -W "$(ls *.conda)" "${COMP_WORDS[1]}"))
+}
+complete -F _unconda_complete unconda

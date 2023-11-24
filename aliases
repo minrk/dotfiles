@@ -1,0 +1,85 @@
+# BSD `which -s` that works on Linux
+alias whichs='which >/dev/null 2>&1'
+
+# if missing, alias proper ack name to ubuntu ack-grep
+whichs ack || alias ack=ack-grep
+alias ackpy='ack --python'
+
+# safe rm by default
+alias rm="rm -i"
+
+# common ls flags
+alias ll="ls -l"
+alias la="ls -a"
+alias lla="ls -la"
+
+# color LS
+whichs dircolors
+if [[ $? -eq 0 ]] && [[ "$TERM" != "dumb" ]]; then
+    # linux
+    eval "`dircolors -b`"
+    alias ls='ls --color=auto'
+else
+    # BSD
+    alias ls='ls -G'
+fi
+
+# inverse grep
+alias xgrep="grep -v "
+
+alias cleardnscache='dscacheutil -flushcache'
+
+################ Python related ####################
+
+# setup/setupegg shortcuts
+alias inplace="python3 setup.py build_ext --inplace"
+alias develop="python3 -m pip install -e ."
+alias pip-e="python3 -m pip install -e"
+alias setup="python3 setup.py"
+# IPython/Jupyter shortcuts
+alias i='ipython'
+alias ip='ipython'
+alias ipqt="ipython qtconsole"
+alias qc="jupyter qtconsole"
+alias nb="jupyter notebook"
+alias tmpnb="IPYTHONDIR=/tmp/ipython ipython notebook --port=9876"
+alias nbconvert="jupyter nbconvert"
+alias nbc="jupyter nbconvert"
+alias pypyenv='mkvirtualenv -p $(which pypy)'
+alias pypy3env='mkvirtualenv -p $(which pypy3)'
+alias jlab='jupyter lab'
+alias lab='jupyter lab'
+
+# sudo with env and PATH
+alias ssudo='sudo env PATH=$PATH'
+
+alias sshrmate="ssh -R 52698:localhost:52698"
+alias fuck='eval $(thefuck $(fc -ln -1))'
+alias docker-rm-dangles='docker rmi $(docker images -f "dangling=true" -q)'
+alias docker-rm-containers='docker rm $(docker ps -aq)'
+alias setup-dists="python setup.py sdist --formats=gztar,zip && python setup.py bdist_wheel"
+alias awk1="awk '{print \$1}'"
+
+function awkn {
+  n="$1"
+  shift
+  awk "{print \$$n}" "$@"
+}
+
+alias awk-docker-images="awk '{print \$1\":\"\$2}'"
+
+alias today='date "+%Y-%m-%d"'
+alias now='date "+%Y-%m-%d-%H.%M"'
+
+# use mamba by default
+whichs mamba && alias conda=mamba
+# conda-for-real
+whichs conda && alias cconda=$(which conda)
+
+alias drm="docker run --rm -it"
+alias drmhere='docker run --rm -it -v$PWD:/io -w /io'
+
+alias xml2json='python3 -c "import json, sys, xmltodict; json.dump(xmltodict.parse(sys.stdin.read()), sys.stdout)"'
+alias xmljq='xml2json | jq'
+
+alias rerender="conda-smithy rerender -c auto"

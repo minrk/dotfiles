@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""
+do the same thing in bash, with less options:
+dname="$name"
+thedate=`stat "$name" | grep "^Modify" | awk '{print $2" "$3}'`
+echo $name
+for i in 1 2 3 4 5; do
+    dname="$(dirname "$dname")"
+    # echo $dname
+    if [ -z "$(find "$dname" -maxdepth 0 -newer "$name" )" ]; then
+        echo "touching $dname at $thedate"
+        touch -c -d "$thedate" "$dname"
+    fi
+done
+"""
+
+import os
+import sys
+from os.path import getatime, getmtime
+
+from datetime import datetime
+import time
+
+MINS = 60
+HOURS = 60 * MINS
+DAYS = 24 * HOURS
+WEEKS = 7 * DAYS
+YEARS = 365 * DAYS
+
+
+def touchup(level, *files):
+    """Touch Up - updates modified time, for up to @level directories above each file.
+    If @level not specified, touches up to root."""
+    # print 'touching up', ', '.join(files)
+    try:
+        level = int(level)
+    except:
+        files = [level] + list(files)
+        level = 999
+
+    now = time.time()
+
+    for fname in files:
+        ftime = getmtime(fname)
+
+        if (ftime > now) or ((now - ftime) > (1 * YEARS)):
+            # scrub weird timetamps (week in future, or year in past)
+            msg = "using current time for %s, due to weird timestamp: " % fname
+            msg += datetime.fromtimestamp(ftime).strftime(" %Y-%m-%d %H:%M")
+            print(msg)
+            ftime = now
+            atime = getatime(fname)
+            os.utime(fname, (atime, ftime))
+
+        try:
+            dname = os.path.dirname(fname)
+            while dname and dname != "/" and level:
+                dtime = getmtime(dname)
+                atime = getatime(dname)
+                # print dname, level, dtime, ftime
+                # round to seconds
+                if int(dtime) < int(ftime):
+                    msg = "touching %s" % dname
+                    msg += datetime.fromtimestamp(ftime).strftime(" %Y-%m-%d %H:%M")
+                    print(msg)
+                    os.utime(dname, (atime, ftime))
+                dname = os.path.dirname(dname)
+                level -= 1
+        except Exception as e:
+            print(e)
+
+
+if __name__ == "__main__":
+    touchup(*sys.argv[1:])

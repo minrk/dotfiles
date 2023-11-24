@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+for file in "$@"; do
+    # get abspath:
+    if [ "${file::1}" == "-" ]; then
+        echo "skipping flag $file"
+    else
+        absfile=$(python3 -c "import os; print (os.path.abspath(\"$file\"))")
+        echo "trashing $absfile"
+        osascript -e "tell application \"Finder\" to move (\"$absfile\" as POSIX file) to trash">/dev/null
+    fi
+done
+IFS=$SAVEIFS

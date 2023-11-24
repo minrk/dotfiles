@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+
+import os
+import sys
+
+
+def add(name, args):
+    try:
+        paths = os.environ[name].split(os.pathsep)
+    except KeyError:
+        paths = []
+    for path in sys.argv:
+        try:
+            path = os.path.abspath(path)
+        except OSError:
+            continue
+        if os.path.isdir(path):
+            if path in paths:  # we already have it, just move it to the front
+                paths.remove(path)
+            paths.insert(0, path)
+    print(os.pathsep.join(paths))
+
+
+def drop(name, args):
+    try:
+        paths = os.environ[name].split(os.pathsep)
+    except KeyError:
+        return
+    for path in sys.argv:
+        try:
+            path = os.path.abspath(path)
+        except OSError:
+            continue
+        if path in paths:  # we already have it, just move it to the front
+            paths.remove(path)
+    print(os.pathsep.join(paths))
+
+
+def fail(name=None):
+    print(
+        "Usage: editenv VARNAME add|drop some [/paths/to/add or/drop]", file=sys.stderr
+    )
+    print("e.g: editenv PATH add ~/bin ~/usr/local/bin", file=sys.stderr)
+    print(
+        "it will only add dirs that exist, and if it is already in the path, it will be moved to the front",
+        file=sys.stderr,
+    )
+    print(
+        "since Python can't actually edit the environment, you actually have to do this:",
+        file=sys.stderr,
+    )
+    if name:
+        print(os.environ.get(name, ""))
+    sys.exit()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        if len(sys.argv) < 2:
+            name = None
+        else:
+            name = sys.argv[1]
+        fail(name)
+    else:
+        if sys.argv[2].lower() == "add":
+            add(sys.argv[1], sys.argv[3:])
+        elif sys.argv[2].lower() == "drop":
+            drop(sys.argv[1], sys.argv[3:])
+        else:
+            fail(sys.argv[1])
