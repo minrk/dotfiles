@@ -101,15 +101,25 @@ fi
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # add to PATH
+# typeset -U makes path unique
 typeset -U path PATH
-path=(/opt/homebrew/bin "$path[@]")
+function addPATH() {
+  # adds a path to front of $PATH if it exists,
+  # otherwise do nothing
+  # typeset -U above ensures it is unique
+  if [[ -d "$1" ]]; then
+    path=("$1" "$path[@]")
+  fi
+}
+addPATH /opt/homebrew/bin
 
 function testandrun () {
+  # source a file if it exists (e.g. various rc files)
   test -f "$1" && source "$1"
 }
 
 export CONDA_ROOT=$HOME/conda
-path=(${CONDA_ROOT}/bin "$path[@]")
+addPATH $CONDA_ROOT/bin
 
 
 # run this before we alias conda=mamba! in aliases
@@ -122,7 +132,7 @@ _dotfiles=$(dirname $(readlink $(print -P %N)))
 . ${_dotfiles}/aliases
 . ${_dotfiles}/functions
 
-path=(${_dotfiles}/bin "$path[@]")
+addPATH ${_dotfiles}/bin
 
 platform=$(uname)
 if [ "$platform" = "Darwin" ]; then # I am a mac
@@ -139,18 +149,19 @@ if [ "$platform" = "Darwin" ]; then # I am a mac
   # which -s brew && test -r "$(brew --prefix)/etc/bash_completion" &&  . "$(brew --prefix)/etc/bash_completion"
   export HOMEBREW_AUTO_UPDATE_SECS=86400  # 24 hours
 
-  test -f $(which terraform 2>/dev/null) && complete -C $(which terraform) terraform
 fi
 
-path=($HOME/dev/mine/git-stuff/bin "$path[@]")
-testandrun $HOME/dev/mine/git-stuff/aliases
-testandrun $HOME/dev/mine/git-stuff/kubernetes.bashrc
+whichs terraform && complete -C $(which terraform) terraform
+
+gitstuff=$HOME/dev/mine/git-stuff
+addPATH $gitstuff/bin
+testandrun $gitstuff/aliases
+testandrun $gitstuff/kubernetes.bashrc
 
 export PYTEST_ADDOPTS="-v --ff"
 
-# path=(${HOME}/Dropbox/bin "$path[@]")
-path=(${HOME}/.local/bin "$path[@]")
-path=(${HOME}/bin "$path[@]")
+addPATH ${HOME}/.local/bin
+addPATH ${HOME}/bin
 
 testandrun /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 testandrun /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
