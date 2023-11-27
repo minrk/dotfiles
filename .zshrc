@@ -8,7 +8,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+ZSH_THEME="candy"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -65,12 +65,17 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
+zstyle ':completion:*:*:docker:*' option-stacking yes
+zstyle ':completion:*:*:docker-*:*' option-stacking yes
+# non-legacy completion doesn't complete images or containers
+zstyle ':omz:plugins:docker' legacy-completion yes
+
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git brew npm github docker 1password ag aliases autojump)
+plugins=(brew git github docker docker-compose 1password ag terraform autojump kubectl gcloud pip)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -151,8 +156,6 @@ if [ "$platform" = "Darwin" ]; then # I am a mac
 
 fi
 
-whichs terraform && complete -C $(which terraform) terraform
-
 gitstuff=$HOME/dev/mine/git-stuff
 addPATH $gitstuff/bin
 testandrun $gitstuff/aliases
@@ -163,10 +166,13 @@ export PYTEST_ADDOPTS="-v --ff"
 addPATH ${HOME}/.local/bin
 addPATH ${HOME}/bin
 
-testandrun /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-testandrun /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
+# testandrun /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+# testandrun /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
 
-whichs atuin && eval "$(atuin init zsh)"
+whichs atuin && eval "$(atuin init zsh --disable-up-arrow)"
 
 # seems to mess up completion on aliases
 unsetopt completealiases
+
+export PS1='%{$fg_bold[green]%}%n@%m %{$fg[blue]%}%D{[%X]} %{$reset_color%}%(4~|%-1~/…/%50<…<%3~%<<|%50<…<%~%<<)%{$reset_color%} $(git_prompt_info)
+%{$fg_bold[blue]%}> %{$reset_color%}'
