@@ -20,24 +20,22 @@ psgrepkillall(){
     echo "Nothing to kill"
     return
   fi
-  echo kill -KILL $pids
-  kill -KILL $pids
+  echo "echo $pids | xargs kill -KILL"
+  echo $pids | xargs kill -KILL
 }
 
-psgrepkillint(){
-  # sig=$1
-  # shift
+psgrepkillterm(){
   pids=`psgrep $@ | awk '{ print $2 }'`
   if [[ -z "$pids" ]]; then
     echo "Nothing to kill"
     return
   fi
-  echo $pids
-  kill -INT $pids
+  echo "echo $pids | xargs kill -TERM"
+  echo $pids | xargs kill -TERM
 }
 alias psg="psgrep"
 alias pskill="psgrepkillall"
-alias psint="psgrepkillint"
+alias psterm="psgrepkillterm"
 
 # find and remove matching files
 findrm(){
