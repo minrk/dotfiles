@@ -41,7 +41,8 @@ ZSH_THEME="candy"
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-ENABLE_CORRECTION="true"
+# autocorrect is wrong way more often than it's right
+ENABLE_CORRECTION="false"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 # You can also set it to another string to have that shown instead of the default red dots.
@@ -75,7 +76,7 @@ zstyle ':omz:plugins:docker' legacy-completion yes
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(brew git github docker docker-compose 1password ag terraform autojump kubectl gcloud pip)
+plugins=(brew git github docker docker-compose 1password terraform autojump kubectl gcloud pip)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -126,6 +127,7 @@ function testandrun () {
 export CONDA_ROOT=$HOME/conda
 addPATH $CONDA_ROOT/bin
 
+addPATH ${KREW_ROOT:-$HOME/.krew}/bin
 
 # run this before we alias conda=mamba! in aliases
 export MAMBA_NO_BANNER=1
@@ -174,5 +176,7 @@ whichs atuin && eval "$(atuin init zsh --disable-up-arrow)"
 # seems to mess up completion on aliases
 unsetopt completealiases
 
-export PS1='%{$fg_bold[green]%}%n@%m %{$fg[blue]%}%D{[%X]} %{$reset_color%}%(4~|%-1~/…/%50<…<%3~%<<|%50<…<%~%<<)%{$reset_color%} $(git_prompt_info)
+export PS1='%{$fg_bold[green]%}%n@%m %{$fg[blue]%}%D{[%X]} %{$reset_color%}%(5~|%-1~/…/%50<…<%3~%<<|%50<…<%~%<<)%{$reset_color%} $(git_prompt_info)
 %{$fg_bold[blue]%}> %{$reset_color%}'
+
+whichs virtualenvwrapper.sh && source virtualenvwrapper.sh

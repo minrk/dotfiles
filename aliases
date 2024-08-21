@@ -5,6 +5,10 @@ alias whichs='which >/dev/null 2>&1'
 whichs ack || alias ack=ack-grep
 alias ackpy='ack --python'
 
+# ag is unmaintained, but I'll never stop typing it,
+# switch to ripgrep
+whichs rg && alias ag=rg
+
 # safe rm by default
 alias rm="rm -i"
 
