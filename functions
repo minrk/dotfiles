@@ -194,14 +194,21 @@ unconda() {
   base="${f%.*}"
   mkdir "$base"
   pushd "$base"
-  7z e -ba "$f"
-  zstd -d pkg-*.tar.zst
+  7z e -y -ba "$f"
+  ls *.zst
+  for zst in *.tar.zst; do
+    echo "zstd $f"
+    zstd -d "$zst"
+    tar -xf "${zst%.*}"
+  done
   rm -f *.zst
   tar -xf *.tar
   rm -f *.tar
 }
 
-_unconda_complete() {
-  COMPREPLY=($(compgen -W "$(ls *.conda)" "${COMP_WORDS[1]}"))
-}
-complete -F _unconda_complete unconda
+if type zstyle 2>&1 > /dev/null; then
+  zstyle ':completion::complete:unconda:*' file-patterns '
+    *(D-/):local-directories:"local directory"
+    *.conda(D-^/):local-files:"local file"
+  '
+fi
