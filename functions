@@ -214,5 +214,5 @@ if type zstyle 2>&1 > /dev/null; then
 fi
 
 import() {
-  ipython -i -c "import $1"
+  ipython -i -c "import $@"
 }
